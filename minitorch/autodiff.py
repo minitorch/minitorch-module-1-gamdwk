@@ -23,7 +23,12 @@ def central_difference(f: Any, *vals: Any, arg: int = 0, epsilon: float = 1e-6) 
         An approximation of $f'_i(x_0, \ldots, x_{n-1})$
     """
     # TODO: Implement for Task 1.1.
-    raise NotImplementedError("Need to implement for Task 1.1")
+    # raise NotImplementedError("Need to implement for Task 1.1")
+    args1 = list(vals)
+    args2 = list(vals)
+    args1[arg] += epsilon
+    args2[arg] -= epsilon
+    return (f(*args1) - f(*args2)) / (2 * epsilon)
 
 
 variable_count = 1
@@ -62,7 +67,22 @@ def topological_sort(variable: Variable) -> Iterable[Variable]:
         Non-constant Variables in topological order starting from the right.
     """
     # TODO: Implement for Task 1.4.
-    raise NotImplementedError("Need to implement for Task 1.4")
+    # raise NotImplementedError("Need to implement for Task 1.4")
+    L: List[Variable] = []
+    visited = []
+
+    def visit(node: Variable) -> None:
+        if node.is_constant():
+            return
+        if node.unique_id in visited:
+            return
+        for parent in node.parents:
+            visit(parent)
+        visited.append(node.unique_id)
+        L.insert(0, node)
+
+    visit(variable)
+    return L
 
 
 def backpropagate(variable: Variable, deriv: Any) -> None:
@@ -77,7 +97,24 @@ def backpropagate(variable: Variable, deriv: Any) -> None:
     No return. Should write to its results to the derivative values of each leaf through `accumulate_derivative`.
     """
     # TODO: Implement for Task 1.4.
-    raise NotImplementedError("Need to implement for Task 1.4")
+    # raise NotImplementedError("Need to implement for Task 1.4")
+    backward_list = topological_sort(variable)
+    deriv_dict: dict[int, Any] = {}
+    for node in backward_list:
+        if deriv_dict.get(node.unique_id) is None:
+            deriv_dict[node.unique_id] = deriv
+
+        if node.is_leaf():
+            node.accumulate_derivative(deriv_dict[node.unique_id])
+            continue
+
+        for var, d in node.chain_rule(deriv_dict[node.unique_id]):
+            if deriv_dict.get(var.unique_id) is None:
+                deriv_dict[var.unique_id] = d
+            else:
+                deriv_dict[var.unique_id] += d
+
+        # node.accumulate_derivative(deriv_dict[node.unique_id])
 
 
 @dataclass
